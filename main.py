@@ -3,8 +3,7 @@ from collections import Counter
 import sys
 
 arguments = sys.argv[1::]
-results_array = {}
-
+confidence_array = {}
 config = {
     "dir": os.getcwd(),
     "confidence": 80,
@@ -28,32 +27,50 @@ for i in range(len(arguments)):
     elif arguments[i] in ("+s"):
         config["ascending"] = True
 
-    elif arguments[i] in ("-p", "-print-confidence"):
+    elif arguments[i] in ("-p", "--print-confidence"):
         config["confidence_print"] = True
 
+    elif arguments[i] in ("-h", "--help"):
+        print("""Command line arguments:
+    -d, --dir: specifies the path to directory where to look for encrypted/compressed files. Default - current directory.
+    -c, --confidence: specifies the threshold level of confidence (in percents from 0 to 100) to treat a certain file as encryped/compressed. Default - 80%.
+    -s: all files in the program output should be sorted by confidence level descending (from high to low).
+    +s: all files in the program output should be sorted by confidence level ascending (from low to high).
+    -p, --print-confidence: print the confidence level along with the file name.
+    -h, --help: print help message for all available options (feel free to copy-paste this text).""")
+        exit(0)
 
-for i in next(os.walk(config["dir"]))[2]:
-    with open(config["dir"]+"/"+i, 'rb') as f:
-        byteArr = list(f.read())
-    p, lns = Counter(byteArr), len(byteArr)
-    aa = []
-    for count in p.values():
-        aa.append(count/lns * math.log(count/lns, 2))
-    entropy = int(-sum(aa) / 8 * 100)
-    results_array[i] = entropy
+
+for file_name in next(os.walk(config["dir"]))[2]:
+    with open(config["dir"]+"/"+file_name, 'rb') as file:
+        byte_array = list(file.read())
+
+    counter_byte = Counter(byte_array)
+    len_byte = len(byte_array)
+    entropie_array= []
+    for count in counter_byte.values():
+        entropie_array.append(count/len_byte * math.log(count/len_byte, 2))
+
+    confidence = int(-sum(entropie_array) / 8 * 100)
+    confidence_array[file_name] = confidence
 
 
 if config["descending"] == True:
-    results_array = sorted(results_array.items(), 
-                            key=lambda x: x[1], reverse=True)
+    confidence_array = sorted(confidence_array.items(),
+                        key=lambda x: x[1], reverse=True)
+
 elif config["ascending"] == True:
-    results_array = sorted(results_array.items(),
-                            key=lambda x: x[1])
+    confidence_array = sorted(confidence_array.items(),
+                        key=lambda x: x[1])
 
+else:
+    confidence_array = [(key, confidence_array[key])
+                        for key in confidence_array]
 
-for key in results_array:
-    if key[1] > config["confidence"]:
+for element in confidence_array:
+    if element[1] > config["confidence"]:
+
         if config["confidence_print"] == True:
-            print(str(key[1])+"%", key[0])
+            print(str(element[1])+"%", element[0])
         else:
-            print(key[0])
+            print(element[0])
