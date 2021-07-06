@@ -1,9 +1,10 @@
-import os, math
-from collections import Counter
+import os
+import math
 import sys
+from collections import Counter
 
 arguments = sys.argv[1::]
-confidence_array = {}
+confidence_array = []
 config = {
     "dir": os.getcwd(),
     "confidence": 80,
@@ -37,35 +38,32 @@ for i in range(len(arguments)):
     -s: all files in the program output should be sorted by confidence level descending (from high to low).
     +s: all files in the program output should be sorted by confidence level ascending (from low to high).
     -p, --print-confidence: print the confidence level along with the file name.
-    -h, --help: print help message for all available options (feel free to copy-paste this text).""")
+    -h, --help: print help message for all available options.""")
         exit(0)
 
 
 for file_name in next(os.walk(config["dir"]))[2]:
-    with open(config["dir"]+"/"+file_name, 'rb') as file:
+    with open(config["dir"] + "/" + file_name, 'rb') as file:
         byte_array = list(file.read())
 
     counter_byte = Counter(byte_array)
     len_byte = len(byte_array)
     entropie_array= []
+    
     for count in counter_byte.values():
-        entropie_array.append(count/len_byte * math.log(count/len_byte, 2))
+        entropie_array.append(count / len_byte * math.log(count / len_byte, 2))
 
     confidence = int(-sum(entropie_array) / 8 * 100)
-    confidence_array[file_name] = confidence
+    confidence_array.append((file_name, confidence))
 
 
 if config["descending"] == True:
-    confidence_array = sorted(confidence_array.items(),
-                        key=lambda x: x[1], reverse=True)
+    confidence_array = sorted(confidence_array, 
+                                key=lambda x: x[1], reverse=True)
 
 elif config["ascending"] == True:
-    confidence_array = sorted(confidence_array.items(),
-                        key=lambda x: x[1])
-
-else:
-    confidence_array = [(key, confidence_array[key])
-                        for key in confidence_array]
+    confidence_array = sorted(confidence_array, 
+                                key=lambda x: x[1])
 
 for element in confidence_array:
     if element[1] > config["confidence"]:
