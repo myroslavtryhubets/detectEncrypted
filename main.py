@@ -58,12 +58,10 @@ for file_name in next(os.walk(config["dir"]))[2]:
 
 
 if config["descending"] == True:
-    confidence_array = sorted(confidence_array, 
-                                key=lambda x: x[1], reverse=True)
+    confidence_array.sort(key=lambda x: x[1], reverse=True)
 
 elif config["ascending"] == True:
-    confidence_array = sorted(confidence_array, 
-                                key=lambda x: x[1])
+    confidence_array.sort(key=lambda x: x[1])
 
 for element in confidence_array:
     if element[1] > config["confidence"]:
